@@ -988,7 +988,7 @@ function renderExpenses(){
         <td class="name-col">${e.name} <span class="cat-tag">${e.category==='cartao'?'cartão':'fixa'}</span></td>
         ${monthCols.map(m=>`<td><button class="pay-chip ${isPaid(e.id,m)?'paid':''}" onclick="togglePaid('${e.id}','${m}')">✓</button></td>`).join('')}
       </tr>
-    `).join('')
+    `).join('')}
   ` : `<tr><td class="empty-hint">Cadastre uma despesa para ver o controle de pagamento.</td></tr>`;
 }
 function resetExpenseForm(){
