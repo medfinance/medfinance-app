@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedFinance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F4F0;
+    --surface:#FFFFFF;
+    --ink:#16203A;
+    --ink-soft:#5B6478;
+    --ink-faint:#8A91A3;
+    --line:#E3E1D8;
+    --primary:#2F6F62;
+    --primary-ink:#1D473D;
+    --primary-soft:#E3EFEA;
+    --amber:#C97A2B;
+    --amber-soft:#F7E9D8;
+    --danger:#C0453C;
+    --danger-soft:#F8E4E1;
+    --radius-sm:8px;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(22,32,58,.05), 0 8px 24px rgba(22,32,58,.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    min-height:100vh;
+  }
+  h1,h2,h3,.num{font-family:'Sora',sans-serif;}
+  button{font-family:inherit;}
+
+  /* ---------- LOGIN ---------- */
+  .login-screen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:var(--primary-ink);
+  }
+  .login-box{
+    background:var(--surface);border-radius:var(--radius);padding:36px 34px;
+    width:100%;max-width:360px;box-shadow:var(--shadow);
+  }
+  .login-box .brand{margin-bottom:4px;}
+  .login-box p.sub{color:var(--ink-soft);font-size:13.5px;margin:0 0 22px 0;}
+  .login-box .field{margin-bottom:14px;}
+  .login-box label{font-size:12.5px;color:var(--ink-soft);font-weight:500;display:block;margin-bottom:5px;}
+  .login-box input{
+    width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 11px;font-size:14px;
+    font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);
+  }
+  .login-box input:focus{outline:2px solid var(--primary);border-color:var(--primary);}
+  .login-box .btn{width:100%;margin-top:8px;padding:11px;}
+  .login-box .btn:disabled{opacity:.6;cursor:default;}
+  .login-err{color:var(--danger);font-size:12.5px;margin-top:8px;display:none;}
+  .login-err.show{display:block;}
+  .login-note{
+    font-size:11.5px;color:var(--ink-faint);margin-top:18px;padding-top:14px;
+    border-top:1px solid var(--line);line-height:1.5;
+  }
+
+  .app{display:none;min-height:100vh;flex-direction:row;}
+  .app.show{display:flex;}
+
+  /* Sidebar */
+  .rail{
+    width:220px;flex-shrink:0;background:var(--surface);
+    border-right:1px solid var(--line);
+    padding:28px 16px;display:flex;flex-direction:column;gap:6px;
+  }
+  .brand{
+    font-family:'Sora',sans-serif;font-weight:700;font-size:19px;
+    color:var(--ink);margin:4px 8px 26px 8px;letter-spacing:-0.02em;
+  }
+  .brand span{color:var(--primary);}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;border-radius:var(--radius-sm);
+    color:var(--ink-soft);cursor:pointer;border:none;background:none;
+    font-size:14px;font-weight:500;text-align:left;width:100%;
+  }
+  .nav-item svg{width:18px;height:18px;flex-shrink:0;}
+  .nav-item:hover{background:var(--bg);color:var(--ink);}
+  .nav-item.active{background:var(--primary-soft);color:var(--primary-ink);}
+
+  .rail-foot{margin-top:auto;padding:12px 8px;color:var(--ink-faint);font-size:12px;}
+  .rail-foot button{background:none;border:none;color:var(--ink-faint);font-size:12px;cursor:pointer;padding:0;text-decoration:underline;}
+
+  /* Main */
+  .main{flex:1;padding:32px 40px;max-width:1180px;}
+  .view{display:none;}
+  .view.active{display:block;}
+  .view-head{margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;}
+  .view-head h1{font-size:22px;margin:0 0 4px 0;font-weight:600;}
+  .view-head p{margin:0;color:var(--ink-soft);font-size:14px;}
+  .hide-btn{
+    display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line);
+    border-radius:20px;padding:7px 13px;font-size:13px;color:var(--ink-soft);cursor:pointer;flex-shrink:0;
+  }
+  .hide-btn:hover{border-color:var(--primary);color:var(--primary-ink);}
+  .hide-btn svg{width:15px;height:15px;}
+
+  /* Dashboard */
+  .today-card{
+    background:var(--primary-ink);color:#fff;border-radius:var(--radius);
+    padding:22px 26px;margin-bottom:22px;display:flex;align-items:center;
+    justify-content:space-between;gap:20px;flex-wrap:wrap;
+  }
+  .today-card .label{font-size:12px;color:#BFDCD3;margin-bottom:6px;}
+  .today-card .hosp{font-size:20px;font-weight:600;font-family:'Sora',sans-serif;}
+  .today-card .time{font-size:13px;color:#CFE6DF;margin-top:4px;}
+  .today-card .dot{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:8px;}
+  .today-card.empty{background:var(--surface);color:var(--ink);border:1px dashed var(--line);}
+  .today-card.empty .label{color:var(--ink-faint);}
+  .today-card.empty .hosp{color:var(--ink-faint);font-weight:500;font-size:15px;}
+
+  .section-label{font-size:13px;font-weight:600;color:var(--ink-soft);margin:0 0 10px 2px;}
+
+  .receivables{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:10px;}
+  .rec-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 20px 18px 20px;
+  }
+  .rec-card .month{font-size:12px;color:var(--ink-faint);text-transform:capitalize;margin-bottom:10px;}
+  .rec-card .value{font-size:28px;font-weight:600;letter-spacing:-0.01em;}
+  .rec-card.current .value{color:var(--primary-ink);}
+  .rec-card .sub{font-size:12.5px;color:var(--ink-soft);margin-top:8px;}
+  .rec-card .tag{
+    display:inline-block;margin-top:10px;font-size:11px;padding:3px 8px;border-radius:20px;
+    background:var(--primary-soft);color:var(--primary-ink);
+  }
+  .rec-card.next2 .tag{background:var(--amber-soft);color:#8A5A1E;}
+
+  .updated-note{font-size:12.5px;color:var(--ink-faint);margin-bottom:26px;}
+
+  .compare-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px;margin-bottom:26px;
+  }
+  .compare-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:18px;}
+  .compare-top h3{margin:0;font-size:15px;font-weight:600;}
+  .balance-pill{
+    padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;font-family:'Sora',sans-serif;
+  }
+  .balance-pill.pos{background:var(--primary-soft);color:var(--primary-ink);}
+  .balance-pill.neg{background:var(--danger-soft);color:var(--danger);}
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;}
+  .compare-item .k{font-size:12px;color:var(--ink-faint);margin-bottom:6px;}
+  .compare-item .v{font-size:22px;font-weight:600;font-family:'Sora',sans-serif;}
+  .compare-item.income .v{color:var(--primary-ink);}
+  .compare-item.expense .v{color:var(--danger);}
+  .compare-bar{height:8px;border-radius:6px;background:var(--line);margin-top:16px;overflow:hidden;display:flex;}
+  .compare-bar .seg-income{background:var(--primary);height:100%;}
+  .compare-bar .seg-expense{background:var(--danger);height:100%;}
+  .compare-sub{font-size:12px;color:var(--ink-faint);margin-top:8px;}
+
+  .breakdown{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;}
+  .breakdown h3{margin:0 0 14px 0;font-size:15px;font-weight:600;}
+  .bd-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .bd-row:last-child{border-bottom:none;}
+  .bd-hosp{display:flex;align-items:center;gap:9px;}
+  .bd-hosp .dot{width:9px;height:9px;border-radius:50%;}
+  .bd-val{font-weight:600;font-family:'Sora',sans-serif;}
+
+  /* Calendar */
+  .cal-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .cal-nav{display:flex;align-items:center;gap:14px;}
+  .cal-nav button{background:var(--surface);border:1px solid var(--line);border-radius:8px;width:32px;height:32px;cursor:pointer;color:var(--ink-soft);}
+  .cal-nav button:hover{background:var(--bg);}
+  .cal-month-label{font-family:'Sora',sans-serif;font-weight:600;font-size:16px;min-width:150px;text-align:center;text-transform:capitalize;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-soft);}
+  .legend-item .dot{width:9px;height:9px;border-radius:50%;}
+
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+  .cal-dow{font-size:11.5px;color:var(--ink-faint);text-align:center;padding-bottom:4px;}
+  .cal-day{
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    min-height:92px;padding:8px;cursor:pointer;display:flex;flex-direction:column;gap:4px;
+    transition:border-color .1s;
+  }
+  .cal-day:hover{border-color:var(--primary);}
+  .cal-day.other-month{opacity:0.35;}
+  .cal-day.today{outline:2px solid var(--primary);outline-offset:-2px;}
+  .cal-day .dnum{font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+  .shift-chip{
+    font-size:10.5px;color:#fff;border-radius:5px;padding:2px 5px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;
+  }
+
+  /* Setup (hospitais) */
+  .hosp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:22px;}
+  .hosp-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px;position:relative;}
+  .hosp-card .bar{height:4px;border-radius:4px;margin-bottom:12px;}
+  .hosp-card h3{margin:0 0 2px 0;font-size:15.5px;}
+  .hosp-card .prazo{font-size:12px;color:var(--ink-faint);margin-bottom:12px;}
+  .hosp-rates{font-size:13px;color:var(--ink-soft);display:flex;flex-direction:column;gap:4px;}
+  .hosp-rates b{color:var(--ink);}
+  .hosp-actions{position:absolute;top:16px;right:14px;display:flex;gap:6px;}
+  .icon-btn{background:none;border:none;cursor:pointer;color:var(--ink-faint);padding:4px;}
+  .icon-btn:hover{color:var(--danger);}
+  .empty-hint{color:var(--ink-faint);font-size:13.5px;padding:10px 2px 18px;}
+
+  .btn{
+    background:var(--primary);color:#fff;border:none;border-radius:8px;
+    padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;
+  }
+  .btn:hover{background:var(--primary-ink);}
+  .btn.secondary{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+  .btn.secondary:hover{background:var(--bg);}
+
+  .form-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;max-width:560px;}
+  .form-card h3{margin:0 0 16px 0;font-size:15px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field.full{grid-column:1/-1;}
+  .field label{font-size:12.5px;color:var(--ink-soft);font-weight:500;}
+  .field input, .field select{
+    border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:14px;
+    font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--primary);outline-offset:0;border-color:var(--primary);}
+  .field input[type=color]{padding:3px;height:38px;cursor:pointer;}
+  .form-actions{margin-top:16px;display:flex;gap:10px;}
+
+  /* Despesas */
+  .exp-toggle-mode{
+    display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);
+    border-radius:20px;padding:6px 6px 6px 14px;margin-bottom:22px;width:fit-content;font-size:13px;color:var(--ink-soft);
+  }
+  .switch{position:relative;width:38px;height:22px;background:var(--line);border-radius:20px;cursor:pointer;flex-shrink:0;}
+  .switch .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2);}
+  .switch.on{background:var(--primary);}
+  .switch.on .knob{left:18px;}
+
+  .exp-tables{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:26px;}
+  .exp-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;}
+  .exp-panel h3{margin:0 0 12px 0;font-size:14.5px;}
+  .exp-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .exp-row:last-child{border-bottom:none;}
+  .exp-row .name{color:var(--ink);}
+  .exp-row .vals{display:flex;align-items:center;gap:14px;}
+  .exp-row .val{font-family:'Sora',sans-serif;font-weight:600;min-width:78px;text-align:right;}
+  .exp-row .split{color:var(--ink-faint);font-size:12px;min-width:78px;text-align:right;}
+  .exp-row .rowactions{display:flex;gap:4px;}
+  .exp-total{display:flex;justify-content:space-between;font-weight:700;padding-top:10px;margin-top:4px;border-top:2px solid var(--line);font-family:'Sora',sans-serif;}
+
+  .paytrack{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;overflow-x:auto;margin-bottom:26px;}
+  .paytrack h3{margin:0 0 14px 0;font-size:15px;}
+  table.pt{border-collapse:collapse;width:100%;min-width:640px;}
+  table.pt th{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.03em;font-weight:600;padding:6px 8px;text-align:center;}
+  table.pt th.name-col{text-align:left;}
+  table.pt td{padding:6px 8px;text-align:center;border-top:1px solid var(--line);}
+  table.pt td.name-col{text-align:left;font-size:13.5px;display:flex;align-items:center;gap:8px;}
+  table.pt .cat-tag{font-size:10px;padding:2px 6px;border-radius:10px;background:var(--bg);color:var(--ink-faint);}
+  .pay-chip{
+    width:30px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--bg);
+    cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:transparent;
+  }
+  .pay-chip.paid{background:var(--primary);border-color:var(--primary);color:#fff;}
+
+  /* Modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(22,32,58,.45);display:none;
+    align-items:center;justify-content:center;z-index:50;padding:20px;
+  }
+  .overlay.show{display:flex;}
+  .modal{background:var(--surface);border-radius:var(--radius);padding:24px;width:100%;max-width:420px;box-shadow:var(--shadow);}
+  .modal h3{margin:0 0 4px 0;font-size:16px;}
+  .modal .modal-date{font-size:12.5px;color:var(--ink-faint);margin-bottom:16px;text-transform:capitalize;}
+  .modal .field{margin-bottom:12px;}
+  .modal .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .err{color:var(--danger);font-size:12.5px;margin-top:2px;display:none;}
+  .err.show{display:block;}
+  .modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:18px;}
+  .existing-shifts{margin-bottom:14px;}
+  .existing-chip{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:7px 10px;border-radius:8px;background:var(--bg);margin-bottom:6px;font-size:12.5px;
+  }
+  .existing-chip .l{display:flex;align-items:center;gap:8px;}
+  .existing-chip .l .dot{width:8px;height:8px;border-radius:50%;}
+  .existing-chip button{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:13px;}
+  .existing-chip button:hover{color:var(--danger);}
+
+  @media (max-width:840px){
+    .app{flex-direction:column;}
+    .rail{
+      width:100%;flex-direction:row;padding:10px 12px;align-items:center;
+      border-right:none;border-bottom:1px solid var(--line);overflow-x:auto;
+    }
+    .brand{display:none;}
+    .rail-foot{display:none;}
+    .nav-item{width:auto;white-space:nowrap;}
+    .main{padding:22px 18px;}
+    .receivables{grid-template-columns:1fr;}
+    .compare-grid{grid-template-columns:1fr;}
+    .exp-tables{grid-template-columns:1fr;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN (Supabase Auth real) -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="brand">Med<span>Finance</span></div>
+    <p class="sub">Entre para ver seu painel financeiro.</p>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="login-user" placeholder="voce@email.com">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••••">
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <button class="btn" id="login-btn" style="width:100%;margin-top:6px;" onclick="tryLogin()">Entrar</button>
+    <div class="login-note">Sua conta é criada no painel do Supabase (Authentication → Users), não aqui. Seus dados ficam protegidos por Row Level Security: só você acessa o que é seu.</div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <div class="rail">
+    <div class="brand">Med<span>Finance</span></div>
+    <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" data-tab="calendar" onclick="switchTab('calendar')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
+      Calendário
+    </button>
+    <button class="nav-item" data-tab="expenses" onclick="switchTab('expenses')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5.5c0-1.9-2.2-3.5-5-3.5s-5 1.6-5 3.5S9.2 9 12 9s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5"/></svg>
+      Despesas
+    </button>
+    <button class="nav-item" data-tab="setup" onclick="switchTab('setup')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg>
+      Hospitais
+    </button>
+    <div class="rail-foot">
+      <button onclick="logout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="view-head">
+        <div>
+          <h1>Visão financeira</h1>
+          <p>Seus plantões trabalhados, convertidos em previsão de recebimento — e comparados às suas despesas.</p>
+        </div>
+        <button class="hide-btn" id="hide-btn" onclick="toggleHide()"></button>
+      </div>
+
+      <div id="today-card"></div>
+
+      <div class="section-label">Previsão de recebimento</div>
+      <div class="receivables" id="receivables"></div>
+      <div class="updated-note" id="updated-note"></div>
+
+      <div class="section-label">Comparativo do mês</div>
+      <div class="compare-card" id="compare-card"></div>
+
+      <div class="breakdown">
+        <h3>Detalhamento por hospital — mês atual</h3>
+        <div id="breakdown-rows"></div>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="view" id="view-calendar">
+      <div class="view-head">
+        <div>
+          <h1>Calendário de plantões</h1>
+          <p>Clique em um dia para escalar um plantão.</p>
+        </div>
+      </div>
+
+      <div class="cal-toolbar">
+        <div class="cal-nav">
+          <button onclick="changeMonth(-1)">‹</button>
+          <div class="cal-month-label" id="cal-month-label"></div>
+          <button onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="legend" id="cal-legend"></div>
+      </div>
+
+      <div class="cal-grid" id="cal-dow-row"></div>
+      <div class="cal-grid" id="cal-grid" style="margin-top:6px;"></div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div class="view" id="view-expenses">
+      <div class="view-head">
+        <div>
+          <h1>Despesas</h1>
+          <p>Débitos de cartão e despesas fixas, com controle de pagamento por mês.</p>
+        </div>
+      </div>
+
+      <div class="exp-toggle-mode">
+        <span>Considerar valor dividido (cenário de divisão de contas)</span>
+        <div class="switch" id="split-switch" onclick="toggleSplitMode()"><div class="knob"></div></div>
+      </div>
+
+      <div class="exp-tables">
+        <div class="exp-panel">
+          <h3>Débitos mensais — cartão</h3>
+          <div id="exp-cartao"></div>
+        </div>
+        <div class="exp-panel">
+          <h3>Despesas fixas mensais</h3>
+          <div id="exp-fixa"></div>
+        </div>
+      </div>
+
+      <div class="paytrack">
+        <h3>Controle de pagamento</h3>
+        <table class="pt" id="pay-table"></table>
+      </div>
+
+      <div class="form-card">
+        <h3 id="exp-form-title">Nova despesa</h3>
+        <input type="hidden" id="exp-edit-id">
+        <div class="form-grid">
+          <div class="field full">
+            <label>Descrição</label>
+            <input type="text" id="ef-name" placeholder="Ex: Plano de saúde">
+          </div>
+          <div class="field">
+            <label>Categoria</label>
+            <select id="ef-category">
+              <option value="cartao">Débito de cartão</option>
+              <option value="fixa">Despesa fixa</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Valor (R$)</label>
+            <input type="number" id="ef-value" placeholder="Ex: 150">
+          </div>
+          <div class="field full">
+            <label>Valor se dividir com alguém (R$, opcional — se vazio, usa o mesmo valor)</label>
+            <input type="number" id="ef-split" placeholder="Ex: 75">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn" onclick="saveExpense()">Salvar despesa</button>
+          <button class="btn secondary" id="exp-cancel-btn" style="display:none" onclick="resetExpenseForm()">Cancelar edição</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETUP -->
+    <div class="view" id="view-setup">
+      <div class="view-head">
+        <div>
+          <h1>Regime de trabalho por hospital</h1>
+          <p>Cadastre cada hospital com sua cor, valores e prazo de pagamento.</p>
+        </div>
+      </div>
+
+      <div class="hosp-list" id="hosp-list"></div>
+
+      <div class="form-card">
+        <h3 id="hosp-form-title">Novo hospital</h3>
+        <input type="hidden" id="hosp-edit-id">
+        <div class="form-grid">
+          <div class="field full">
+            <label>Nome do hospital</label>
+            <input type="text" id="f-name" placeholder="Ex: Hospital São Camilo">
+          </div>
+          <div class="field">
+            <label>Cor no calendário</label>
+            <input type="color" id="f-color" value="#3B6EA5">
+          </div>
+          <div class="field">
+            <label>Prazo médio de pagamento (dias)</label>
+            <input type="number" id="f-prazo" placeholder="Ex: 45" min="1" max="90">
+          </div>
+          <div class="field">
+            <label>Valor da hora fixa (R$)</label>
+            <input type="number" id="f-hourly" placeholder="Ex: 50">
+          </div>
+          <div class="field">
+            <label>Produtividade 1 — desfecho (R$)</label>
+            <input type="number" id="f-prod1" placeholder="Ex: 30">
+          </div>
+          <div class="field">
+            <label>Produtividade 2 — sem desfecho (R$)</label>
+            <input type="number" id="f-prod2" placeholder="Ex: 20">
+          </div>
+          <div class="field">
+            <label>Produtividade 3 — desfecho de outro médico (R$)</label>
+            <input type="number" id="f-prod3" placeholder="Ex: 10">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn" onclick="saveHospital()">Salvar hospital</button>
+          <button class="btn secondary" id="cancel-edit-btn" style="display:none" onclick="resetHospForm()">Cancelar edição</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: add/edit shift -->
+<div class="overlay" id="shift-overlay">
+  <div class="modal">
+    <h3>Escalar plantão</h3>
+    <div class="modal-date" id="modal-date"></div>
+
+    <div class="existing-shifts" id="existing-shifts"></div>
+
+    <div class="field">
+      <label>Hospital</label>
+      <select id="m-hospital"></select>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Entrada</label>
+        <input type="time" id="m-start" value="19:00">
+      </div>
+      <div class="field">
+        <label>Saída</label>
+        <input type="time" id="m-end" value="07:00">
+      </div>
+    </div>
+    <div class="field">
+      <label>Produtividade extra neste plantão (R$, opcional)</label>
+      <input type="number" id="m-extra" placeholder="0">
+    </div>
+    <div class="err" id="m-error">Este horário colide com um plantão já escalado neste dia.</div>
+
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeModal()">Fechar</button>
+      <button class="btn" onclick="addShift()">Adicionar plantão</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO — preencha com os dados do SEU projeto Supabase
+   (Project Settings > API, no painel do Supabase)
+   ===================================================================== */
+const SUPABASE_URL = 'https://sxuykmvzjdisgklsaoid.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_qioXMJ8pPMhrR6ROsOwdWg_pk2ld8L-';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentUserId = null;
+
+/* ---------- estado (espelho local do banco) ---------- */
+let hospitals = [];
+let shifts = [];
+let expenses = [];
+let paymentsRaw = []; // {id, expense_id, month_ref, paid}
+
+const TODAY = new Date(); // data real do dispositivo
+let calCursor = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+let modalDateStr = null;
+let hideValues = true;
+let splitMode = false;
+const MONTH_KEYS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const currentMonthKey = MONTH_KEYS[TODAY.getMonth()];
+
+const MONTHS = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const DOWS = ['dom','seg','ter','qua','qui','sex','sáb'];
+
+/* ---------- login / sessão ---------- */
+async function tryLogin(){
+  const email = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-err');
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = 'Entrando...';
+  const {data, error} = await supabase.auth.signInWithPassword({email, password:pass});
+  btn.disabled = false; btn.textContent = 'Entrar';
+  if(error){
+    err.textContent = 'Não foi possível entrar: verifique e-mail e senha.';
+    err.classList.add('show');
+    return;
+  }
+  err.classList.remove('show');
+  currentUserId = data.user.id;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('show');
+  await loadAllData();
+  switchTab('dashboard');
+}
+async function logout(){
+  await supabase.auth.signOut();
+  currentUserId = null;
+  hospitals=[]; shifts=[]; expenses=[]; paymentsRaw=[];
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  hideValues = true;
+}
+(async function initSession(){
+  const {data:{session}} = await supabase.auth.getSession();
+  if(session){
+    currentUserId = session.user.id;
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').classList.add('show');
+    await loadAllData();
+  }
+  renderHideBtn();
+})();
+
+/* ---------- carregar dados do Supabase ---------- */
+async function loadAllData(){
+  const [{data:h,error:eh},{data:s,error:es},{data:e,error:ee},{data:p,error:ep}] = await Promise.all([
+    supabase.from('hospitals').select('*').order('created_at'),
+    supabase.from('shifts').select('*'),
+    supabase.from('expenses').select('*').order('created_at'),
+    supabase.from('expense_payments').select('*'),
+  ]);
+  if(eh||es||ee||ep){ console.error(eh,es,ee,ep); alert('Erro ao carregar dados. Confira SUPABASE_URL/ANON_KEY e se o schema.sql foi executado.'); return; }
+  hospitals = (h||[]).map(r=>({id:r.id, name:r.name, color:r.color, hourly:Number(r.hourly_rate), prod1:Number(r.prod1), prod2:Number(r.prod2), prod3:Number(r.prod3), prazo:r.prazo_dias}));
+  shifts = (s||[]).map(r=>({id:r.id, date:r.shift_date, hospitalId:r.hospital_id, start:r.start_time.slice(0,5), end:r.end_time.slice(0,5), extra:Number(r.extra_value)}));
+  expenses = (e||[]).map(r=>({id:r.id, name:r.name, category:r.category, value:Number(r.value), split:Number(r.split_value)}));
+  paymentsRaw = p||[];
+  renderDashboard();
+}
+
+/* ---------- helpers ---------- */
+function pad(n){return String(n).padStart(2,'0');}
+function toISO(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
+function fmtBRL(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function money(v){ return hideValues ? '••••••' : fmtBRL(v); }
+function hospitalById(id){return hospitals.find(h=>h.id===id);}
+function monthRefFor(key, year){ const idx=MONTH_KEYS.indexOf(key); return `${year||TODAY.getFullYear()}-${pad(idx+1)}-01`; }
+function isPaid(expenseId,key){ return paymentsRaw.some(p=>p.expense_id===expenseId && p.month_ref===monthRefFor(key) && p.paid); }
+
+function shiftHours(start,end){
+  const [sh,sm]=start.split(':').map(Number);
+  const [eh,em]=end.split(':').map(Number);
+  let mins = (eh*60+em)-(sh*60+sm);
+  if(mins<=0) mins += 24*60;
+  return mins/60;
+}
+function shiftRange(date,start,end){
+  const [sh,sm]=start.split(':').map(Number);
+  const [eh,em]=end.split(':').map(Number);
+  const s = new Date(`${date}T00:00:00`); s.setHours(sh,sm,0,0);
+  let e = new Date(`${date}T00:00:00`); e.setHours(eh,em,0,0);
+  if(e<=s) e = new Date(e.getTime()+24*60*60*1000);
+  return [s,e];
+}
+function overlaps(aStart,aEnd,bStart,bEnd){ return aStart < bEnd && bStart < aEnd; }
+function shiftValue(sh){
+  const hosp = hospitalById(sh.hospitalId);
+  const hrs = shiftHours(sh.start,sh.end);
+  return hrs*hosp.hourly + (Number(sh.extra)||0);
+}
+function payDate(sh){
+  const hosp = hospitalById(sh.hospitalId);
+  const d = new Date(`${sh.date}T00:00:00`);
+  d.setDate(d.getDate()+hosp.prazo);
+  return d;
+}
+function monthDiff(a,b){ return (a.getFullYear()-b.getFullYear())*12 + (a.getMonth()-b.getMonth()); }
+function expenseValue(e){ return splitMode ? e.split : e.value; }
+function totalExpenses(){ return expenses.reduce((sum,e)=>sum+expenseValue(e),0); }
+
+/* ---------- tabs ---------- */
+function switchTab(tab){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
+  if(tab==='dashboard') renderDashboard();
+  if(tab==='calendar') renderCalendar();
+  if(tab==='setup') renderSetup();
+  if(tab==='expenses') renderExpenses();
+}
+
+/* ---------- HIDE VALUES ---------- */
+function toggleHide(){ hideValues = !hideValues; renderDashboard(); }
+function renderHideBtn(){
+  const btn = document.getElementById('hide-btn');
+  btn.innerHTML = hideValues
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l18 18M10.6 10.6a3 3 0 004.24 4.24M9.5 5.4A10.4 10.4 0 0112 5c5 0 9 4 10 7-.5 1.5-1.6 3.2-3.1 4.5M6.6 6.6C4.3 8.1 2.6 10 2 12c1 3 5 7 10 7 1.3 0 2.5-.2 3.6-.6"/></svg> Mostrar valores`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> Ocultar valores`;
+}
+
+/* ---------- DASHBOARD ---------- */
+function renderDashboard(){
+  renderHideBtn();
+  const todayISO = toISO(TODAY);
+  const todayShifts = shifts.filter(s=>s.date===todayISO);
+  const tc = document.getElementById('today-card');
+  if(todayShifts.length===0){
+    tc.innerHTML = `<div class="today-card empty"><div><div class="label">Hoje</div><div class="hosp">Sem plantão escalado</div></div></div>`;
+  } else {
+    tc.innerHTML = todayShifts.map(s=>{
+      const h = hospitalById(s.hospitalId);
+      return `<div class="today-card">
+        <div>
+          <div class="label">Você trabalha hoje em</div>
+          <div class="hosp"><span class="dot" style="background:${h.color}"></span>${h.name}</div>
+          <div class="time">${s.start} — ${s.end}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const buckets = [0,0,0];
+  const perHospCurrent = {};
+  shifts.forEach(s=>{
+    const pd = payDate(s);
+    const diff = monthDiff(new Date(pd.getFullYear(),pd.getMonth(),1), new Date(TODAY.getFullYear(),TODAY.getMonth(),1));
+    if(diff>=0 && diff<=2){
+      buckets[diff] += shiftValue(s);
+      if(diff===0) perHospCurrent[s.hospitalId] = (perHospCurrent[s.hospitalId]||0) + shiftValue(s);
+    }
+  });
+
+  const labels = [0,1,2].map(off=>{
+    const d = new Date(TODAY.getFullYear(), TODAY.getMonth()+off, 1);
+    return MONTHS[d.getMonth()] + ' / ' + d.getFullYear();
+  });
+
+  document.getElementById('receivables').innerHTML = `
+    <div class="rec-card current">
+      <div class="month">${labels[0]}</div>
+      <div class="value num">${money(buckets[0])}</div>
+      <div class="sub">A receber neste mês</div>
+      <div class="tag">Mês atual</div>
+    </div>
+    <div class="rec-card next1">
+      <div class="month">${labels[1]}</div>
+      <div class="value num">${money(buckets[1])}</div>
+      <div class="sub">Previsão de recebimento</div>
+      <div class="tag">Próximo mês</div>
+    </div>
+    <div class="rec-card next2">
+      <div class="month">${labels[2]}</div>
+      <div class="value num">${money(buckets[2])}</div>
+      <div class="sub">Previsão de recebimento</div>
+      <div class="tag">Mês seguinte</div>
+    </div>
+  `;
+  document.getElementById('updated-note').textContent =
+    `Valores futuros recalculados a partir do prazo de pagamento de cada hospital. Última atualização: agora.`;
+
+  const income = buckets[0];
+  const totalExp = totalExpenses();
+  const paidExp = expenses.reduce((sum,e)=> sum + (isPaid(e.id,currentMonthKey) ? expenseValue(e) : 0), 0);
+  const pendingExp = totalExp - paidExp;
+  const balance = income - totalExp;
+  const incomePct = (income+totalExp)>0 ? Math.round(income/(income+totalExp)*100) : 50;
+
+  document.getElementById('compare-card').innerHTML = `
+    <div class="compare-top">
+      <h3>Receita prevista vs. despesas — ${MONTHS[TODAY.getMonth()]}</h3>
+      <div class="balance-pill ${balance>=0?'pos':'neg'}">${balance>=0 ? 'Sobra para investir' : 'Prejuízo no mês'}: ${money(Math.abs(balance))}</div>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-item income"><div class="k">Receita prevista (plantões)</div><div class="v">${money(income)}</div></div>
+      <div class="compare-item expense"><div class="k">Despesas totais${splitMode ? ' (valor dividido)' : ''}</div><div class="v">${money(totalExp)}</div></div>
+      <div class="compare-item"><div class="k">Saldo do mês</div><div class="v" style="color:${balance>=0?'var(--primary-ink)':'var(--danger)'}">${balance>=0?'+':'-'}${money(Math.abs(balance))}</div></div>
+    </div>
+    <div class="compare-bar"><div class="seg-income" style="width:${incomePct}%"></div><div class="seg-expense" style="width:${100-incomePct}%"></div></div>
+    <div class="compare-sub">Despesas já pagas este mês: ${money(paidExp)} · Pendentes: ${money(pendingExp)}</div>
+  `;
+
+  const bd = document.getElementById('breakdown-rows');
+  const rows = Object.entries(perHospCurrent);
+  bd.innerHTML = rows.length ? rows.map(([hid,val])=>{
+    const h = hospitalById(hid);
+    return `<div class="bd-row"><div class="bd-hosp"><span class="dot" style="background:${h.color}"></span>${h.name}</div><div class="bd-val">${money(val)}</div></div>`;
+  }).join('') : `<div class="bd-row"><span style="color:var(--ink-faint)">Nenhum recebimento previsto para este mês.</span></div>`;
+}
+
+/* ---------- CALENDAR ---------- */
+function changeMonth(delta){ calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth()+delta, 1); renderCalendar(); }
+function renderCalendar(){
+  document.getElementById('cal-month-label').textContent = MONTHS[calCursor.getMonth()] + ' de ' + calCursor.getFullYear();
+  document.getElementById('cal-legend').innerHTML = hospitals.map(h=>`<div class="legend-item"><span class="dot" style="background:${h.color}"></span>${h.name}</div>`).join('');
+  document.getElementById('cal-dow-row').innerHTML = DOWS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+
+  const year = calCursor.getFullYear(), month = calCursor.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const startOffset = firstDay.getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const cells = [];
+  for(let i=startOffset-1;i>=0;i--) cells.push({day: daysInPrevMonth-i, other:true, dateObj:new Date(year, month-1, daysInPrevMonth-i)});
+  for(let d=1; d<=daysInMonth; d++) cells.push({day:d, other:false, dateObj:new Date(year, month, d)});
+  while(cells.length % 7 !== 0){ const next = cells.length - (startOffset+daysInMonth) + 1; cells.push({day:next, other:true, dateObj:new Date(year, month+1, next)}); }
+
+  document.getElementById('cal-grid').innerHTML = cells.map(c=>{
+    const iso = toISO(c.dateObj);
+    const isToday = toISO(TODAY)===iso;
+    const dayShifts = shifts.filter(s=>s.date===iso);
+    const chips = dayShifts.map(s=>{ const h = hospitalById(s.hospitalId); return `<div class="shift-chip" style="background:${h.color}">${s.start}-${s.end}</div>`; }).join('');
+    return `<div class="cal-day ${c.other?'other-month':''} ${isToday?'today':''}" onclick="openModal('${iso}')"><div class="dnum">${c.day}</div>${chips}</div>`;
+  }).join('');
+}
+
+/* ---------- MODAL / SHIFT CRUD ---------- */
+function openModal(iso){
+  if(hospitals.length===0){ alert('Cadastre pelo menos um hospital em "Hospitais" antes de escalar um plantão.'); return; }
+  modalDateStr = iso;
+  const d = new Date(iso+'T00:00:00');
+  document.getElementById('modal-date').textContent = d.toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  document.getElementById('m-hospital').innerHTML = hospitals.map(h=>`<option value="${h.id}">${h.name}</option>`).join('');
+  document.getElementById('m-extra').value = '';
+  document.getElementById('m-error').classList.remove('show');
+  renderExistingShifts();
+  document.getElementById('shift-overlay').classList.add('show');
+}
+function closeModal(){ document.getElementById('shift-overlay').classList.remove('show'); }
+function renderExistingShifts(){
+  const box = document.getElementById('existing-shifts');
+  const list = shifts.filter(s=>s.date===modalDateStr);
+  box.innerHTML = list.length ? list.map(s=>{
+    const h = hospitalById(s.hospitalId);
+    return `<div class="existing-chip"><div class="l"><span class="dot" style="background:${h.color}"></span>${h.name} · ${s.start}–${s.end}</div><button onclick="removeShift('${s.id}')">Remover</button></div>`;
+  }).join('') : '';
+}
+async function removeShift(id){
+  await supabase.from('shifts').delete().eq('id', id);
+  shifts = shifts.filter(s=>s.id!==id);
+  renderExistingShifts();
+  renderCalendar();
+}
+async function addShift(){
+  const hospitalId = document.getElementById('m-hospital').value;
+  const start = document.getElementById('m-start').value;
+  const end = document.getElementById('m-end').value;
+  const extra = Number(document.getElementById('m-extra').value) || 0;
+  const errBox = document.getElementById('m-error');
+
+  const [newStart,newEnd] = shiftRange(modalDateStr, start, end);
+  const clash = shifts.some(s=>{
+    if(s.date!==modalDateStr) return false;
+    const [eStart,eEnd] = shiftRange(s.date, s.start, s.end);
+    return overlaps(newStart,newEnd,eStart,eEnd);
+  });
+  if(clash){ errBox.classList.add('show'); return; }
+  errBox.classList.remove('show');
+
+  const {data, error} = await supabase.from('shifts').insert({
+    user_id: currentUserId, hospital_id: hospitalId, shift_date: modalDateStr,
+    start_time: start, end_time: end, extra_value: extra
+  }).select().single();
+  if(error){ alert('Erro ao salvar plantão: '+error.message); return; }
+  shifts.push({id:data.id, date:data.shift_date, hospitalId:data.hospital_id, start:data.start_time.slice(0,5), end:data.end_time.slice(0,5), extra:Number(data.extra_value)});
+  renderExistingShifts();
+  renderCalendar();
+}
+
+/* ---------- SETUP (hospitais) ---------- */
+function renderSetup(){
+  const list = document.getElementById('hosp-list');
+  list.innerHTML = hospitals.length ? hospitals.map(h=>`
+    <div class="hosp-card">
+      <div class="hosp-actions">
+        <button class="icon-btn" onclick="editHospital('${h.id}')" title="Editar">✎</button>
+        <button class="icon-btn" onclick="deleteHospital('${h.id}')" title="Excluir">✕</button>
+      </div>
+      <div class="bar" style="background:${h.color}"></div>
+      <h3>${h.name}</h3>
+      <div class="prazo">Prazo de pagamento: ${h.prazo} dias</div>
+      <div class="hosp-rates">
+        <div>Hora fixa: <b>${fmtBRL(h.hourly)}</b></div>
+        <div>Produtividade 1 (com desfecho): <b>${fmtBRL(h.prod1)}</b></div>
+        <div>Produtividade 2 (sem desfecho): <b>${fmtBRL(h.prod2)}</b></div>
+        <div>Produtividade 3 (desfecho de outro médico): <b>${fmtBRL(h.prod3)}</b></div>
+      </div>
+    </div>
+  `).join('') : `<div class="empty-hint">Nenhum hospital cadastrado ainda. Use o formulário abaixo.</div>`;
+}
+function resetHospForm(){
+  document.getElementById('hosp-edit-id').value = '';
+  document.getElementById('hosp-form-title').textContent = 'Novo hospital';
+  document.getElementById('cancel-edit-btn').style.display = 'none';
+  ['f-name','f-prazo','f-hourly','f-prod1','f-prod2','f-prod3'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-color').value = '#3B6EA5';
+}
+function editHospital(id){
+  const h = hospitalById(id);
+  document.getElementById('hosp-edit-id').value = h.id;
+  document.getElementById('hosp-form-title').textContent = 'Editar hospital';
+  document.getElementById('cancel-edit-btn').style.display = 'inline-block';
+  document.getElementById('f-name').value = h.name;
+  document.getElementById('f-color').value = h.color;
+  document.getElementById('f-prazo').value = h.prazo;
+  document.getElementById('f-hourly').value = h.hourly;
+  document.getElementById('f-prod1').value = h.prod1;
+  document.getElementById('f-prod2').value = h.prod2;
+  document.getElementById('f-prod3').value = h.prod3;
+  window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+}
+async function deleteHospital(id){
+  await supabase.from('hospitals').delete().eq('id', id);
+  hospitals = hospitals.filter(h=>h.id!==id);
+  shifts = shifts.filter(s=>s.hospitalId!==id);
+  renderSetup();
+}
+async function saveHospital(){
+  const name = document.getElementById('f-name').value.trim();
+  if(!name) return;
+  const payload = {
+    name,
+    color: document.getElementById('f-color').value,
+    prazo_dias: Number(document.getElementById('f-prazo').value)||45,
+    hourly_rate: Number(document.getElementById('f-hourly').value)||0,
+    prod1: Number(document.getElementById('f-prod1').value)||0,
+    prod2: Number(document.getElementById('f-prod2').value)||0,
+    prod3: Number(document.getElementById('f-prod3').value)||0,
+  };
+  const editId = document.getElementById('hosp-edit-id').value;
+  if(editId){
+    const {error} = await supabase.from('hospitals').update(payload).eq('id', editId);
+    if(error){ alert('Erro: '+error.message); return; }
+    Object.assign(hospitalById(editId), {name:payload.name, color:payload.color, prazo:payload.prazo_dias, hourly:payload.hourly_rate, prod1:payload.prod1, prod2:payload.prod2, prod3:payload.prod3});
+  } else {
+    const {data, error} = await supabase.from('hospitals').insert({...payload, user_id: currentUserId}).select().single();
+    if(error){ alert('Erro: '+error.message); return; }
+    hospitals.push({id:data.id, name:data.name, color:data.color, hourly:Number(data.hourly_rate), prod1:Number(data.prod1), prod2:Number(data.prod2), prod3:Number(data.prod3), prazo:data.prazo_dias});
+  }
+  resetHospForm();
+  renderSetup();
+}
+
+/* ---------- EXPENSES ---------- */
+function toggleSplitMode(){ splitMode = !splitMode; document.getElementById('split-switch').classList.toggle('on', splitMode); renderExpenses(); }
+async function togglePaid(id, key){
+  const monthRef = monthRefFor(key);
+  const existing = paymentsRaw.find(p=>p.expense_id===id && p.month_ref===monthRef);
+  if(existing){
+    const newPaid = !existing.paid;
+    const {error} = await supabase.from('expense_payments').update({paid:newPaid, paid_at: newPaid? new Date().toISOString(): null}).eq('id', existing.id);
+    if(error){ alert('Erro: '+error.message); return; }
+    existing.paid = newPaid;
+  } else {
+    const {data, error} = await supabase.from('expense_payments').insert({user_id:currentUserId, expense_id:id, month_ref:monthRef, paid:true, paid_at:new Date().toISOString()}).select().single();
+    if(error){ alert('Erro: '+error.message); return; }
+    paymentsRaw.push(data);
+  }
+  renderExpenses();
+}
+function expensePanel(list){
+  const total = list.reduce((s,e)=>s+expenseValue(e),0);
+  const rows = list.map(e=>`
+    <div class="exp-row">
+      <div class="name">${e.name}</div>
+      <div class="vals">
+        <div class="val">${fmtBRL(e.value)}</div>
+        <div class="split">${e.split!==e.value ? 'div: '+fmtBRL(e.split) : ''}</div>
+        <div class="rowactions">
+          <button class="icon-btn" onclick="editExpense('${e.id}')" title="Editar">✎</button>
+          <button class="icon-btn" onclick="deleteExpense('${e.id}')" title="Excluir">✕</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  return (rows || `<div class="empty-hint">Nenhuma despesa nesta categoria ainda.</div>`) + `<div class="exp-total"><span>Total${splitMode?' (dividido)':''}</span><span>${fmtBRL(total)}</span></div>`;
+}
+function renderExpenses(){
+  document.getElementById('split-switch').classList.toggle('on', splitMode);
+  document.getElementById('exp-cartao').innerHTML = expensePanel(expenses.filter(e=>e.category==='cartao'));
+  document.getElementById('exp-fixa').innerHTML = expensePanel(expenses.filter(e=>e.category==='fixa'));
+
+  const table = document.getElementById('pay-table');
+  const monthCols = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  table.innerHTML = expenses.length ? `
+    <tr><th class="name-col">Despesa</th>${monthCols.map(m=>`<th>${m}</th>`).join('')}</tr>
+    ${expenses.map(e=>`
+      <tr>
+        <td class="name-col">${e.name} <span class="cat-tag">${e.category==='cartao'?'cartão':'fixa'}</span></td>
+        ${monthCols.map(m=>`<td><button class="pay-chip ${isPaid(e.id,m)?'paid':''}" onclick="togglePaid('${e.id}','${m}')">✓</button></td>`).join('')}
+      </tr>
+    `).join('')
+  ` : `<tr><td class="empty-hint">Cadastre uma despesa para ver o controle de pagamento.</td></tr>`;
+}
+function resetExpenseForm(){
+  document.getElementById('exp-edit-id').value='';
+  document.getElementById('exp-form-title').textContent='Nova despesa';
+  document.getElementById('exp-cancel-btn').style.display='none';
+  ['ef-name','ef-value','ef-split'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ef-category').value='cartao';
+}
+function editExpense(id){
+  const e = expenses.find(x=>x.id===id);
+  document.getElementById('exp-edit-id').value=e.id;
+  document.getElementById('exp-form-title').textContent='Editar despesa';
+  document.getElementById('exp-cancel-btn').style.display='inline-block';
+  document.getElementById('ef-name').value=e.name;
+  document.getElementById('ef-category').value=e.category;
+  document.getElementById('ef-value').value=e.value;
+  document.getElementById('ef-split').value=e.split;
+  window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+}
+async function deleteExpense(id){
+  await supabase.from('expenses').delete().eq('id', id);
+  expenses = expenses.filter(e=>e.id!==id);
+  paymentsRaw = paymentsRaw.filter(p=>p.expense_id!==id);
+  renderExpenses();
+}
+async function saveExpense(){
+  const name = document.getElementById('ef-name').value.trim();
+  if(!name) return;
+  const value = Number(document.getElementById('ef-value').value)||0;
+  const splitRaw = document.getElementById('ef-split').value;
+  const payload = {
+    name,
+    category: document.getElementById('ef-category').value,
+    value,
+    split_value: splitRaw!=='' ? Number(splitRaw) : value,
+  };
+  const editId = document.getElementById('exp-edit-id').value;
+  if(editId){
+    const {error} = await supabase.from('expenses').update(payload).eq('id', editId);
+    if(error){ alert('Erro: '+error.message); return; }
+    Object.assign(expenses.find(e=>e.id===editId), {name:payload.name, category:payload.category, value:payload.value, split:payload.split_value});
+  } else {
+    const {data, error} = await supabase.from('expenses').insert({...payload, user_id: currentUserId}).select().single();
+    if(error){ alert('Erro: '+error.message); return; }
+    expenses.push({id:data.id, name:data.name, category:data.category, value:Number(data.value), split:Number(data.split_value)});
+  }
+  resetExpenseForm();
+  renderExpenses();
+}
+</script>
+</body>
+</html>
