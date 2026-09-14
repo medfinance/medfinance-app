@@ -139,6 +139,18 @@
 
   .updated-note{font-size:12.5px;color:var(--ink-faint);margin-bottom:26px;}
 
+  /* week strip */
+  .week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:26px;}
+  .wk-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 7px;display:flex;flex-direction:column;gap:4px;min-height:96px;}
+  .wk-card.today{outline:2px solid var(--primary);outline-offset:-2px;}
+  .wk-dow{font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.03em;}
+  .wk-dnum{font-size:16px;font-weight:600;font-family:'Sora',sans-serif;line-height:1;}
+  .wk-hol{font-size:9px;line-height:1.15;font-weight:500;}
+  .wk-chip{font-size:10px;color:#fff;border-radius:4px;padding:2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;}
+  .wk-empty{font-size:12px;color:var(--ink-faint);}
+  .wk-val{margin-top:auto;font-size:11.5px;font-weight:600;color:var(--primary-ink);font-family:'Sora',sans-serif;}
+  @media (max-width:840px){ .week-strip{grid-template-columns:repeat(7,minmax(70px,1fr));overflow-x:auto;} }
+
   .compare-card{
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
     padding:22px;margin-bottom:26px;
@@ -193,6 +205,8 @@
     font-size:10.5px;color:#fff;border-radius:5px;padding:2px 5px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;
   }
+  .cal-hol{font-size:9.5px;line-height:1.15;font-weight:500;overflow:hidden;}
+  .cal-day.has-hol{background:#FCFBF7;}
 
   /* Setup (hospitais) */
   .hosp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:22px;}
@@ -228,6 +242,9 @@
   .field input:focus, .field select:focus{outline:2px solid var(--primary);outline-offset:0;border-color:var(--primary);}
   .field input[type=color]{padding:3px;height:38px;cursor:pointer;}
   .form-actions{margin-top:16px;display:flex;gap:10px;}
+  .radio-row{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+  .radio-opt{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink);font-weight:400;cursor:pointer;}
+  .radio-opt input{width:auto;}
 
   /* Despesas */
   .exp-toggle-mode{
@@ -264,6 +281,7 @@
     cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:transparent;
   }
   .pay-chip.paid{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .pay-na{color:var(--line);font-size:16px;}
 
   /* Modal */
   .overlay{
@@ -365,6 +383,12 @@
 
       <div id="today-card"></div>
 
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:baseline;">
+        <span>Escala da semana</span>
+        <span id="week-total" style="font-weight:400;color:var(--ink-faint);font-size:12.5px;"></span>
+      </div>
+      <div class="week-strip" id="week-strip"></div>
+
       <div class="section-label">Previsão de recebimento</div>
       <div class="receivables" id="receivables"></div>
       <div class="updated-note" id="updated-note"></div>
@@ -409,11 +433,6 @@
         </div>
       </div>
 
-      <div class="exp-toggle-mode">
-        <span>Considerar valor dividido (cenário de divisão de contas)</span>
-        <div class="switch" id="split-switch" onclick="toggleSplitMode()"><div class="knob"></div></div>
-      </div>
-
       <div class="exp-tables">
         <div class="exp-panel">
           <h3>Débitos mensais — cartão</h3>
@@ -446,13 +465,34 @@
             </select>
           </div>
           <div class="field">
-            <label>Valor (R$)</label>
-            <input type="number" id="ef-value" placeholder="Ex: 150">
+            <label>Mês de início</label>
+            <input type="month" id="ef-start">
           </div>
-          <div class="field full">
-            <label>Valor se dividir com alguém (R$, opcional — se vazio, usa o mesmo valor)</label>
-            <input type="number" id="ef-split" placeholder="Ex: 75">
+
+          <div class="field full" style="border-top:1px solid var(--line);padding-top:14px;margin-top:2px;">
+            <label>Como você quer lançar o valor?</label>
+            <div class="radio-row">
+              <label class="radio-opt"><input type="radio" name="ef-mode" value="total" checked onchange="updateExpModeUI()"> Valor total (divido pelos meses)</label>
+              <label class="radio-opt"><input type="radio" name="ef-mode" value="parcela" onchange="updateExpModeUI()"> Valor já da parcela mensal</label>
+            </div>
           </div>
+          <div class="field">
+            <label id="ef-value-label">Valor total (R$)</label>
+            <input type="number" id="ef-value" placeholder="Ex: 1200" step="0.01">
+          </div>
+          <div class="field">
+            <label>Em quantos meses</label>
+            <input type="number" id="ef-months" placeholder="Ex: 4" min="1" value="1">
+          </div>
+
+          <div class="field full" style="border-top:1px solid var(--line);padding-top:14px;margin-top:2px;">
+            <label class="radio-opt"><input type="checkbox" id="ef-issplit" onchange="updateExpModeUI()"> Essa despesa é dividida com outras pessoas?</label>
+          </div>
+          <div class="field" id="ef-people-wrap" style="display:none;">
+            <label>Dividida entre quantas pessoas (você incluído)</label>
+            <input type="number" id="ef-people" placeholder="Ex: 2" min="1" value="2">
+          </div>
+          <div class="field full" id="ef-preview" style="color:var(--primary-ink);font-size:13px;"></div>
         </div>
         <div class="form-actions">
           <button class="btn" onclick="saveExpense()">Salvar despesa</button>
@@ -572,12 +612,61 @@ const TODAY = new Date(); // data real do dispositivo
 let calCursor = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
 let modalDateStr = null;
 let hideValues = true;
-let splitMode = false;
 const MONTH_KEYS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const currentMonthKey = MONTH_KEYS[TODAY.getMonth()];
 
 const MONTHS = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 const DOWS = ['dom','seg','ter','qua','qui','sex','sáb'];
+
+/* ---------- feriados (nacionais + Ceará + Fortaleza + facultativos) ---------- */
+/* n = nacional · e = estadual (CE) · m = municipal (Fortaleza) · f = facultativo */
+const HOLIDAYS = {
+  '2026-01-01':{t:'Confraternização Universal', k:'n'},
+  '2026-02-16':{t:'Carnaval', k:'f'},
+  '2026-02-17':{t:'Carnaval', k:'f'},
+  '2026-02-18':{t:'Quarta-feira de Cinzas', k:'f'},
+  '2026-03-19':{t:'Dia de São José (padroeiro do CE)', k:'e'},
+  '2026-03-25':{t:'Data Magna do Ceará', k:'e'},
+  '2026-04-03':{t:'Sexta-feira Santa', k:'n'},
+  '2026-04-21':{t:'Tiradentes', k:'n'},
+  '2026-05-01':{t:'Dia do Trabalhador', k:'n'},
+  '2026-06-04':{t:'Corpus Christi', k:'f'},
+  '2026-08-15':{t:'N. S. da Assunção (Fortaleza)', k:'m'},
+  '2026-09-07':{t:'Independência do Brasil', k:'n'},
+  '2026-10-04':{t:'Eleições (1º turno)', k:'f'},
+  '2026-10-12':{t:'N. S. Aparecida', k:'n'},
+  '2026-10-25':{t:'Eleições (2º turno)', k:'f'},
+  '2026-10-28':{t:'Dia do Servidor Público', k:'f'},
+  '2026-11-02':{t:'Finados', k:'n'},
+  '2026-11-15':{t:'Proclamação da República', k:'n'},
+  '2026-11-20':{t:'Consciência Negra', k:'n'},
+  '2026-12-08':{t:'N. S. da Conceição (Fortaleza)', k:'m'},
+  '2026-12-24':{t:'Véspera de Natal', k:'f'},
+  '2026-12-25':{t:'Natal', k:'n'},
+  '2026-12-31':{t:'Véspera de Ano Novo', k:'f'},
+  '2027-01-01':{t:'Confraternização Universal', k:'n'},
+  '2027-02-08':{t:'Carnaval', k:'f'},
+  '2027-02-09':{t:'Carnaval', k:'f'},
+  '2027-02-10':{t:'Quarta-feira de Cinzas', k:'f'},
+  '2027-03-19':{t:'Dia de São José (padroeiro do CE)', k:'e'},
+  '2027-03-25':{t:'Data Magna do Ceará', k:'e'},
+  '2027-03-26':{t:'Sexta-feira Santa', k:'n'},
+  '2027-04-21':{t:'Tiradentes', k:'n'},
+  '2027-05-01':{t:'Dia do Trabalhador', k:'n'},
+  '2027-05-27':{t:'Corpus Christi', k:'f'},
+  '2027-08-15':{t:'N. S. da Assunção (Fortaleza)', k:'m'},
+  '2027-09-07':{t:'Independência do Brasil', k:'n'},
+  '2027-10-12':{t:'N. S. Aparecida', k:'n'},
+  '2027-10-28':{t:'Dia do Servidor Público', k:'f'},
+  '2027-11-02':{t:'Finados', k:'n'},
+  '2027-11-15':{t:'Proclamação da República', k:'n'},
+  '2027-11-20':{t:'Consciência Negra', k:'n'},
+  '2027-12-08':{t:'N. S. da Conceição (Fortaleza)', k:'m'},
+  '2027-12-25':{t:'Natal', k:'n'},
+};
+const HOLIDAY_COLORS = {n:'#C0453C', e:'#2F6F62', m:'#7A5CC0', f:'#C97A2B'};
+const HOLIDAY_LABELS = {n:'Nacional', e:'Estadual (CE)', m:'Fortaleza', f:'Facultativo'};
+function holidayFor(iso){ return HOLIDAYS[iso] || null; }
 
 /* ---------- login / sessão ---------- */
 async function tryLogin(){
@@ -632,7 +721,14 @@ async function loadAllData(){
   if(eh||es||ee||ep){ console.error(eh,es,ee,ep); alert('Erro ao carregar dados. Confira SUPABASE_URL/ANON_KEY e se o schema.sql foi executado.'); return; }
   hospitals = (h||[]).map(r=>({id:r.id, name:r.name, color:r.color, hourly:Number(r.hourly_rate), prod1:Number(r.prod1), prod2:Number(r.prod2), prod3:Number(r.prod3), prazo:r.prazo_dias}));
   shifts = (s||[]).map(r=>({id:r.id, date:r.shift_date, hospitalId:r.hospital_id, start:r.start_time.slice(0,5), end:r.end_time.slice(0,5), extra:Number(r.extra_value)}));
-  expenses = (e||[]).map(r=>({id:r.id, name:r.name, category:r.category, value:Number(r.value), split:Number(r.split_value)}));
+  expenses = (e||[]).map(r=>({
+    id:r.id, name:r.name, category:r.category,
+    monthly:Number(r.monthly_value),
+    startMonth:r.start_month,           // 'YYYY-MM-01'
+    months:r.months||1,
+    isSplit:!!r.is_split,
+    people:r.split_people||1
+  }));
   paymentsRaw = p||[];
   renderDashboard();
 }
@@ -674,8 +770,19 @@ function payDate(sh){
   return d;
 }
 function monthDiff(a,b){ return (a.getFullYear()-b.getFullYear())*12 + (a.getMonth()-b.getMonth()); }
-function expenseValue(e){ return splitMode ? e.split : e.value; }
-function totalExpenses(){ return expenses.reduce((sum,e)=>sum+expenseValue(e),0); }
+
+// valor mensal já é o valor que entra por mês (o cálculo de parcela/divisão é feito no cadastro)
+function expenseMonthlyValue(e){ return Number(e.monthly)||0; }
+// a despesa está ativa num dado mês (Date do dia 1) se estiver dentro da janela start..start+months-1
+function expenseActiveIn(e, monthDate){
+  const start = new Date(e.startMonth+'T00:00:00');
+  const diff = monthDiff(monthDate, new Date(start.getFullYear(), start.getMonth(), 1));
+  return diff>=0 && diff < (e.months||1);
+}
+// total de despesas ativas num mês específico
+function totalExpensesForMonth(monthDate){
+  return expenses.reduce((sum,e)=> sum + (expenseActiveIn(e,monthDate) ? expenseMonthlyValue(e) : 0), 0);
+}
 
 /* ---------- tabs ---------- */
 function switchTab(tab){
@@ -686,7 +793,7 @@ function switchTab(tab){
   if(tab==='dashboard') renderDashboard();
   if(tab==='calendar') renderCalendar();
   if(tab==='setup') renderSetup();
-  if(tab==='expenses') renderExpenses();
+  if(tab==='expenses'){ renderExpenses(); if(!document.getElementById('exp-edit-id').value) resetExpenseForm(); }
 }
 
 /* ---------- HIDE VALUES ---------- */
@@ -718,6 +825,35 @@ function renderDashboard(){
       </div>`;
     }).join('');
   }
+
+  // ----- escala da semana (domingo a sábado da semana atual) -----
+  const weekStart = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() - TODAY.getDay());
+  const weekCards = [];
+  let weekTotal = 0;
+  for(let i=0;i<7;i++){
+    const d = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()+i);
+    const iso = toISO(d);
+    const daysShifts = shifts.filter(s=>s.date===iso);
+    const dayValue = daysShifts.reduce((sum,s)=>sum+shiftValue(s),0);
+    weekTotal += dayValue;
+    const hol = holidayFor(iso);
+    weekCards.push({d, iso, daysShifts, dayValue, isToday: toISO(TODAY)===iso, hol});
+  }
+  document.getElementById('week-total').innerHTML = weekTotal>0 ? `Total da semana: <b>${money(weekTotal)}</b>` : '';
+  document.getElementById('week-strip').innerHTML = weekCards.map(c=>{
+    const chips = c.daysShifts.map(s=>{
+      const h = hospitalById(s.hospitalId);
+      return `<div class="wk-chip" style="background:${h.color}">${s.start}-${s.end}</div>`;
+    }).join('');
+    const holBadge = c.hol ? `<div class="wk-hol" style="color:${HOLIDAY_COLORS[c.hol.k]}" title="${c.hol.t}">● ${c.hol.t}</div>` : '';
+    return `<div class="wk-card ${c.isToday?'today':''}">
+      <div class="wk-dow">${DOWS[c.d.getDay()]}</div>
+      <div class="wk-dnum">${c.d.getDate()}</div>
+      ${holBadge}
+      ${chips || '<div class="wk-empty">—</div>'}
+      ${c.dayValue>0 ? `<div class="wk-val">${money(c.dayValue)}</div>` : ''}
+    </div>`;
+  }).join('');
 
   const buckets = [0,0,0];
   const perHospCurrent = {};
@@ -759,8 +895,9 @@ function renderDashboard(){
     `Valores futuros recalculados a partir do prazo de pagamento de cada hospital. Última atualização: agora.`;
 
   const income = buckets[0];
-  const totalExp = totalExpenses();
-  const paidExp = expenses.reduce((sum,e)=> sum + (isPaid(e.id,currentMonthKey) ? expenseValue(e) : 0), 0);
+  const curMonthDate = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+  const totalExp = totalExpensesForMonth(curMonthDate);
+  const paidExp = expenses.reduce((sum,e)=> sum + ((expenseActiveIn(e,curMonthDate) && isPaid(e.id,currentMonthKey)) ? expenseMonthlyValue(e) : 0), 0);
   const pendingExp = totalExp - paidExp;
   const balance = income - totalExp;
   const incomePct = (income+totalExp)>0 ? Math.round(income/(income+totalExp)*100) : 50;
@@ -772,7 +909,7 @@ function renderDashboard(){
     </div>
     <div class="compare-grid">
       <div class="compare-item income"><div class="k">Receita prevista (plantões)</div><div class="v">${money(income)}</div></div>
-      <div class="compare-item expense"><div class="k">Despesas totais${splitMode ? ' (valor dividido)' : ''}</div><div class="v">${money(totalExp)}</div></div>
+      <div class="compare-item expense"><div class="k">Despesas do mês</div><div class="v">${money(totalExp)}</div></div>
       <div class="compare-item"><div class="k">Saldo do mês</div><div class="v" style="color:${balance>=0?'var(--primary-ink)':'var(--danger)'}">${balance>=0?'+':'-'}${money(Math.abs(balance))}</div></div>
     </div>
     <div class="compare-bar"><div class="seg-income" style="width:${incomePct}%"></div><div class="seg-expense" style="width:${100-incomePct}%"></div></div>
@@ -791,7 +928,9 @@ function renderDashboard(){
 function changeMonth(delta){ calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth()+delta, 1); renderCalendar(); }
 function renderCalendar(){
   document.getElementById('cal-month-label').textContent = MONTHS[calCursor.getMonth()] + ' de ' + calCursor.getFullYear();
-  document.getElementById('cal-legend').innerHTML = hospitals.map(h=>`<div class="legend-item"><span class="dot" style="background:${h.color}"></span>${h.name}</div>`).join('');
+  const hospLegend = hospitals.map(h=>`<div class="legend-item"><span class="dot" style="background:${h.color}"></span>${h.name}</div>`).join('');
+  const holLegend = Object.keys(HOLIDAY_LABELS).map(k=>`<div class="legend-item"><span class="dot" style="background:${HOLIDAY_COLORS[k]}"></span>${HOLIDAY_LABELS[k]}</div>`).join('');
+  document.getElementById('cal-legend').innerHTML = hospLegend + holLegend;
   document.getElementById('cal-dow-row').innerHTML = DOWS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
 
   const year = calCursor.getFullYear(), month = calCursor.getMonth();
@@ -808,8 +947,10 @@ function renderCalendar(){
     const iso = toISO(c.dateObj);
     const isToday = toISO(TODAY)===iso;
     const dayShifts = shifts.filter(s=>s.date===iso);
+    const hol = holidayFor(iso);
+    const holBadge = hol ? `<div class="cal-hol" style="color:${HOLIDAY_COLORS[hol.k]}" title="${hol.t} — ${HOLIDAY_LABELS[hol.k]}">● ${hol.t}</div>` : '';
     const chips = dayShifts.map(s=>{ const h = hospitalById(s.hospitalId); return `<div class="shift-chip" style="background:${h.color}">${s.start}-${s.end}</div>`; }).join('');
-    return `<div class="cal-day ${c.other?'other-month':''} ${isToday?'today':''}" onclick="openModal('${iso}')"><div class="dnum">${c.day}</div>${chips}</div>`;
+    return `<div class="cal-day ${c.other?'other-month':''} ${isToday?'today':''} ${hol?'has-hol':''}" onclick="openModal('${iso}')"><div class="dnum">${c.day}</div>${holBadge}${chips}</div>`;
   }).join('');
 }
 
@@ -818,7 +959,10 @@ function openModal(iso){
   if(hospitals.length===0){ alert('Cadastre pelo menos um hospital em "Hospitais" antes de escalar um plantão.'); return; }
   modalDateStr = iso;
   const d = new Date(iso+'T00:00:00');
-  document.getElementById('modal-date').textContent = d.toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  const dateStr = d.toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  const hol = holidayFor(iso);
+  document.getElementById('modal-date').innerHTML = dateStr +
+    (hol ? `<div style="margin-top:6px;font-weight:600;color:${HOLIDAY_COLORS[hol.k]}">● ${hol.t} <span style="font-weight:400;color:var(--ink-faint)">(${HOLIDAY_LABELS[hol.k]})</span></div>` : '');
   document.getElementById('m-hospital').innerHTML = hospitals.map(h=>`<option value="${h.id}">${h.name}</option>`).join('');
   document.getElementById('m-extra').value = '';
   document.getElementById('m-error').classList.remove('show');
@@ -941,7 +1085,6 @@ async function saveHospital(){
 }
 
 /* ---------- EXPENSES ---------- */
-function toggleSplitMode(){ splitMode = !splitMode; document.getElementById('split-switch').classList.toggle('on', splitMode); renderExpenses(); }
 async function togglePaid(id, key){
   const monthRef = monthRefFor(key);
   const existing = paymentsRaw.find(p=>p.expense_id===id && p.month_ref===monthRef);
@@ -957,25 +1100,38 @@ async function togglePaid(id, key){
   }
   renderExpenses();
 }
+// descrição legível da janela/divisão da despesa
+function expenseNote(e){
+  const parts = [];
+  if(e.months>1){
+    const start = new Date(e.startMonth+'T00:00:00');
+    const end = new Date(start.getFullYear(), start.getMonth()+e.months-1, 1);
+    parts.push(`${e.months}x (${MONTHS[start.getMonth()].slice(0,3)}/${String(start.getFullYear()).slice(2)}–${MONTHS[end.getMonth()].slice(0,3)}/${String(end.getFullYear()).slice(2)})`);
+  }
+  if(e.isSplit && e.people>1) parts.push(`÷${e.people} pessoas`);
+  return parts.join(' · ');
+}
 function expensePanel(list){
-  const total = list.reduce((s,e)=>s+expenseValue(e),0);
-  const rows = list.map(e=>`
-    <div class="exp-row">
-      <div class="name">${e.name}</div>
+  const curMonthDate = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+  const total = list.reduce((s,e)=> s + (expenseActiveIn(e,curMonthDate) ? expenseMonthlyValue(e) : 0), 0);
+  const rows = list.map(e=>{
+    const active = expenseActiveIn(e, curMonthDate);
+    const note = expenseNote(e);
+    return `
+    <div class="exp-row" style="${active?'':'opacity:.45'}">
+      <div class="name">${e.name}${note?` <span class="split">${note}</span>`:''}</div>
       <div class="vals">
-        <div class="val">${fmtBRL(e.value)}</div>
-        <div class="split">${e.split!==e.value ? 'div: '+fmtBRL(e.split) : ''}</div>
+        <div class="val">${fmtBRL(expenseMonthlyValue(e))}<span style="font-weight:400;color:var(--ink-faint)">/mês</span></div>
         <div class="rowactions">
           <button class="icon-btn" onclick="editExpense('${e.id}')" title="Editar">✎</button>
           <button class="icon-btn" onclick="deleteExpense('${e.id}')" title="Excluir">✕</button>
         </div>
       </div>
-    </div>
-  `).join('');
-  return (rows || `<div class="empty-hint">Nenhuma despesa nesta categoria ainda.</div>`) + `<div class="exp-total"><span>Total${splitMode?' (dividido)':''}</span><span>${fmtBRL(total)}</span></div>`;
+    </div>`;
+  }).join('');
+  return (rows || `<div class="empty-hint">Nenhuma despesa nesta categoria ainda.</div>`) + `<div class="exp-total"><span>Total do mês</span><span>${fmtBRL(total)}</span></div>`;
 }
 function renderExpenses(){
-  document.getElementById('split-switch').classList.toggle('on', splitMode);
   document.getElementById('exp-cartao').innerHTML = expensePanel(expenses.filter(e=>e.category==='cartao'));
   document.getElementById('exp-fixa').innerHTML = expensePanel(expenses.filter(e=>e.category==='fixa'));
 
@@ -986,17 +1142,55 @@ function renderExpenses(){
     ${expenses.map(e=>`
       <tr>
         <td class="name-col">${e.name} <span class="cat-tag">${e.category==='cartao'?'cartão':'fixa'}</span></td>
-        ${monthCols.map(m=>`<td><button class="pay-chip ${isPaid(e.id,m)?'paid':''}" onclick="togglePaid('${e.id}','${m}')">✓</button></td>`).join('')}
+        ${monthCols.map((m,idx)=>{
+          const monthDate = new Date(TODAY.getFullYear(), idx, 1);
+          const active = expenseActiveIn(e, monthDate);
+          return active
+            ? `<td><button class="pay-chip ${isPaid(e.id,m)?'paid':''}" onclick="togglePaid('${e.id}','${m}')">✓</button></td>`
+            : `<td><span class="pay-na">·</span></td>`;
+        }).join('')}
       </tr>
     `).join('')}
   ` : `<tr><td class="empty-hint">Cadastre uma despesa para ver o controle de pagamento.</td></tr>`;
+}
+// atualiza rótulos e prévia do formulário conforme o modo escolhido
+function updateExpModeUI(){
+  const mode = document.querySelector('input[name="ef-mode"]:checked').value;
+  document.getElementById('ef-value-label').textContent = mode==='total' ? 'Valor total (R$)' : 'Valor da parcela mensal (R$)';
+  const isSplit = document.getElementById('ef-issplit').checked;
+  document.getElementById('ef-people-wrap').style.display = isSplit ? 'flex' : 'none';
+
+  const value = Number(document.getElementById('ef-value').value)||0;
+  const months = Math.max(1, Number(document.getElementById('ef-months').value)||1);
+  const people = isSplit ? Math.max(1, Number(document.getElementById('ef-people').value)||1) : 1;
+  const parcela = (mode==='total' ? value/months : value) / people;
+  document.getElementById('ef-preview').textContent = value>0
+    ? `Entra como ${fmtBRL(parcela)}/mês, por ${months} ${months>1?'meses':'mês'}${people>1?` (já dividido por ${people})`:''}.`
+    : '';
+}
+function computeMonthly(){
+  const mode = document.querySelector('input[name="ef-mode"]:checked').value;
+  const value = Number(document.getElementById('ef-value').value)||0;
+  const months = Math.max(1, Number(document.getElementById('ef-months').value)||1);
+  const isSplit = document.getElementById('ef-issplit').checked;
+  const people = isSplit ? Math.max(1, Number(document.getElementById('ef-people').value)||1) : 1;
+  const monthly = (mode==='total' ? value/months : value) / people;
+  return {monthly:Math.round(monthly*100)/100, months, isSplit, people};
 }
 function resetExpenseForm(){
   document.getElementById('exp-edit-id').value='';
   document.getElementById('exp-form-title').textContent='Nova despesa';
   document.getElementById('exp-cancel-btn').style.display='none';
-  ['ef-name','ef-value','ef-split'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ef-name').value='';
+  document.getElementById('ef-value').value='';
+  document.getElementById('ef-months').value='1';
   document.getElementById('ef-category').value='cartao';
+  document.querySelector('input[name="ef-mode"][value="total"]').checked = true;
+  document.getElementById('ef-issplit').checked = false;
+  document.getElementById('ef-people').value='2';
+  const now = new Date();
+  document.getElementById('ef-start').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
+  updateExpModeUI();
 }
 function editExpense(id){
   const e = expenses.find(x=>x.id===id);
@@ -1005,8 +1199,15 @@ function editExpense(id){
   document.getElementById('exp-cancel-btn').style.display='inline-block';
   document.getElementById('ef-name').value=e.name;
   document.getElementById('ef-category').value=e.category;
-  document.getElementById('ef-value').value=e.value;
-  document.getElementById('ef-split').value=e.split;
+  document.getElementById('ef-start').value = e.startMonth.slice(0,7);
+  // na edição, mostramos direto o valor da parcela (modo parcela)
+  document.querySelector('input[name="ef-mode"][value="parcela"]').checked = true;
+  // valor exibido é a parcela ANTES da divisão (multiplica de volta pelas pessoas)
+  document.getElementById('ef-value').value = (e.monthly * (e.isSplit? e.people : 1)).toFixed(2);
+  document.getElementById('ef-months').value = e.months;
+  document.getElementById('ef-issplit').checked = e.isSplit;
+  document.getElementById('ef-people').value = e.people;
+  updateExpModeUI();
   window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
 }
 async function deleteExpense(id){
@@ -1018,23 +1219,30 @@ async function deleteExpense(id){
 async function saveExpense(){
   const name = document.getElementById('ef-name').value.trim();
   if(!name) return;
-  const value = Number(document.getElementById('ef-value').value)||0;
-  const splitRaw = document.getElementById('ef-split').value;
+  const startM = document.getElementById('ef-start').value; // 'YYYY-MM'
+  const startMonth = startM ? `${startM}-01` : `${TODAY.getFullYear()}-${pad(TODAY.getMonth()+1)}-01`;
+  const {monthly, months, isSplit, people} = computeMonthly();
   const payload = {
     name,
     category: document.getElementById('ef-category').value,
-    value,
-    split_value: splitRaw!=='' ? Number(splitRaw) : value,
+    start_month: startMonth,
+    months,
+    monthly_value: monthly,
+    is_split: isSplit,
+    split_people: people,
+    // mantém colunas antigas preenchidas p/ compatibilidade
+    value: monthly,
+    split_value: monthly,
   };
   const editId = document.getElementById('exp-edit-id').value;
   if(editId){
     const {error} = await sb.from('expenses').update(payload).eq('id', editId);
     if(error){ alert('Erro: '+error.message); return; }
-    Object.assign(expenses.find(e=>e.id===editId), {name:payload.name, category:payload.category, value:payload.value, split:payload.split_value});
+    Object.assign(expenses.find(e=>e.id===editId), {name, category:payload.category, monthly, startMonth, months, isSplit, people});
   } else {
     const {data, error} = await sb.from('expenses').insert({...payload, user_id: currentUserId}).select().single();
     if(error){ alert('Erro: '+error.message); return; }
-    expenses.push({id:data.id, name:data.name, category:data.category, value:Number(data.value), split:Number(data.split_value)});
+    expenses.push({id:data.id, name:data.name, category:data.category, monthly:Number(data.monthly_value), startMonth:data.start_month, months:data.months, isSplit:!!data.is_split, people:data.split_people});
   }
   resetExpenseForm();
   renderExpenses();
