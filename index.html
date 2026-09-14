@@ -141,15 +141,19 @@
 
   /* week strip */
   .week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:26px;}
-  .wk-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 7px;display:flex;flex-direction:column;gap:4px;min-height:96px;}
+  .wk-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 9px;display:flex;flex-direction:column;gap:6px;min-height:120px;}
   .wk-card.today{outline:2px solid var(--primary);outline-offset:-2px;}
-  .wk-dow{font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.03em;}
-  .wk-dnum{font-size:16px;font-weight:600;font-family:'Sora',sans-serif;line-height:1;}
-  .wk-hol{font-size:9px;line-height:1.15;font-weight:500;}
-  .wk-chip{font-size:10px;color:#fff;border-radius:4px;padding:2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;}
-  .wk-empty{font-size:12px;color:var(--ink-faint);}
-  .wk-val{margin-top:auto;font-size:11.5px;font-weight:600;color:var(--primary-ink);font-family:'Sora',sans-serif;}
-  @media (max-width:840px){ .week-strip{grid-template-columns:repeat(7,minmax(70px,1fr));overflow-x:auto;} }
+  .wk-head{display:flex;align-items:baseline;justify-content:space-between;}
+  .wk-dow{font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
+  .wk-dnum{font-size:17px;font-weight:600;font-family:'Sora',sans-serif;line-height:1;}
+  .wk-hol{font-size:9.5px;line-height:1.2;font-weight:600;}
+  .wk-body{display:flex;flex-direction:column;gap:4px;flex:1;}
+  .wk-shift{display:flex;flex-direction:column;gap:1px;}
+  .wk-chip{font-size:10px;color:#fff;border-radius:4px;padding:2px 5px;font-weight:600;text-align:center;}
+  .wk-hosp{font-size:9.5px;color:var(--ink-soft);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .wk-empty{font-size:11px;color:var(--ink-faint);}
+  .wk-val{font-size:12px;font-weight:600;color:var(--ink-faint);font-family:'Sora',sans-serif;padding-top:6px;border-top:1px solid var(--line);}
+  .wk-val.has{color:var(--primary-ink);}
 
   .compare-card{
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
@@ -307,20 +311,59 @@
   .existing-chip button{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:13px;}
   .existing-chip button:hover{color:var(--danger);}
 
+  /* ---------- TABLET ---------- */
   @media (max-width:840px){
     .app{flex-direction:column;}
     .rail{
-      width:100%;flex-direction:row;padding:10px 12px;align-items:center;
+      width:100%;flex-direction:row;padding:8px 10px;align-items:center;gap:4px;
       border-right:none;border-bottom:1px solid var(--line);overflow-x:auto;
+      position:sticky;top:0;z-index:10;
     }
     .brand{display:none;}
-    .rail-foot{display:none;}
-    .nav-item{width:auto;white-space:nowrap;}
-    .main{padding:22px 18px;}
+    .rail-foot{margin:0 0 0 auto;padding:0 8px;}
+    .nav-item{width:auto;white-space:nowrap;padding:8px 12px;}
+    .main{padding:20px 16px;max-width:100%;}
     .receivables{grid-template-columns:1fr;}
-    .compare-grid{grid-template-columns:1fr;}
+    .compare-grid{grid-template-columns:1fr;gap:14px;}
     .exp-tables{grid-template-columns:1fr;}
     .form-grid{grid-template-columns:1fr;}
+    .week-strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
+    .wk-card{flex:0 0 128px;scroll-snap-align:start;}
+  }
+  /* ---------- CELULAR ---------- */
+  @media (max-width:560px){
+    .main{padding:16px 14px;}
+    .view-head{flex-direction:column;gap:12px;}
+    .view-head h1{font-size:20px;}
+    .hide-btn{align-self:flex-start;}
+
+    /* dashboard */
+    .today-card{padding:18px 18px;}
+    .today-card .hosp{font-size:18px;}
+    .rec-card .value{font-size:24px;}
+    .compare-item .v{font-size:20px;}
+    .balance-pill{font-size:12px;}
+    .compare-top{gap:10px;}
+
+    /* calendário: dias mais legíveis, chips empilhados */
+    .cal-toolbar{flex-direction:column;align-items:stretch;gap:12px;}
+    .cal-nav{justify-content:space-between;}
+    .legend{gap:8px 14px;}
+    .cal-grid{gap:4px;}
+    .cal-day{min-height:64px;padding:5px 4px;border-radius:8px;}
+    .cal-day .dnum{font-size:11px;}
+    .cal-hol{font-size:8px;}
+    .shift-chip{font-size:8.5px;padding:1px 3px;}
+    .cal-dow{font-size:10px;}
+
+    /* despesas */
+    .exp-panel{padding:14px 14px;}
+    .exp-row{font-size:13px;}
+    .paytrack{padding:14px;}
+
+    /* hospitais */
+    .hosp-list{grid-template-columns:1fr;}
+    .form-card{padding:18px 16px;}
   }
 </style>
 </head>
@@ -839,19 +882,21 @@ function renderDashboard(){
     const hol = holidayFor(iso);
     weekCards.push({d, iso, daysShifts, dayValue, isToday: toISO(TODAY)===iso, hol});
   }
-  document.getElementById('week-total').innerHTML = weekTotal>0 ? `Total da semana: <b>${money(weekTotal)}</b>` : '';
+  document.getElementById('week-total').innerHTML = `Total da semana: <b>${money(weekTotal)}</b>`;
   document.getElementById('week-strip').innerHTML = weekCards.map(c=>{
     const chips = c.daysShifts.map(s=>{
       const h = hospitalById(s.hospitalId);
-      return `<div class="wk-chip" style="background:${h.color}">${s.start}-${s.end}</div>`;
+      return `<div class="wk-shift">
+        <span class="wk-chip" style="background:${h.color}">${s.start}-${s.end}</span>
+        <span class="wk-hosp">${h.name}</span>
+      </div>`;
     }).join('');
-    const holBadge = c.hol ? `<div class="wk-hol" style="color:${HOLIDAY_COLORS[c.hol.k]}" title="${c.hol.t}">● ${c.hol.t}</div>` : '';
+    const holBadge = c.hol ? `<div class="wk-hol" style="color:${HOLIDAY_COLORS[c.hol.k]}" title="${c.hol.t}">${c.hol.t}</div>` : '';
     return `<div class="wk-card ${c.isToday?'today':''}">
-      <div class="wk-dow">${DOWS[c.d.getDay()]}</div>
-      <div class="wk-dnum">${c.d.getDate()}</div>
+      <div class="wk-head"><span class="wk-dow">${DOWS[c.d.getDay()]}</span><span class="wk-dnum">${c.d.getDate()}</span></div>
       ${holBadge}
-      ${chips || '<div class="wk-empty">—</div>'}
-      ${c.dayValue>0 ? `<div class="wk-val">${money(c.dayValue)}</div>` : ''}
+      <div class="wk-body">${chips || '<div class="wk-empty">Sem plantão</div>'}</div>
+      <div class="wk-val ${c.dayValue>0?'has':''}">${money(c.dayValue)}</div>
     </div>`;
   }).join('');
 
