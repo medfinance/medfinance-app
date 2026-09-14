@@ -559,7 +559,7 @@
 const SUPABASE_URL = 'https://sxuykmvzjdisgklsaoid.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_qioXMJ8pPMhrR6ROsOwdWg_pk2ld8L-';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUserId = null;
 
 /* ---------- estado (espelho local do banco) ---------- */
@@ -586,7 +586,7 @@ async function tryLogin(){
   const err = document.getElementById('login-err');
   const btn = document.getElementById('login-btn');
   btn.disabled = true; btn.textContent = 'Entrando...';
-  const {data, error} = await supabase.auth.signInWithPassword({email, password:pass});
+  const {data, error} = await sb.auth.signInWithPassword({email, password:pass});
   btn.disabled = false; btn.textContent = 'Entrar';
   if(error){
     err.textContent = 'Não foi possível entrar: verifique e-mail e senha.';
@@ -601,7 +601,7 @@ async function tryLogin(){
   switchTab('dashboard');
 }
 async function logout(){
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   currentUserId = null;
   hospitals=[]; shifts=[]; expenses=[]; paymentsRaw=[];
   document.getElementById('app').classList.remove('show');
@@ -611,7 +611,7 @@ async function logout(){
   hideValues = true;
 }
 (async function initSession(){
-  const {data:{session}} = await supabase.auth.getSession();
+  const {data:{session}} = await sb.auth.getSession();
   if(session){
     currentUserId = session.user.id;
     document.getElementById('login-screen').style.display='none';
@@ -624,10 +624,10 @@ async function logout(){
 /* ---------- carregar dados do Supabase ---------- */
 async function loadAllData(){
   const [{data:h,error:eh},{data:s,error:es},{data:e,error:ee},{data:p,error:ep}] = await Promise.all([
-    supabase.from('hospitals').select('*').order('created_at'),
-    supabase.from('shifts').select('*'),
-    supabase.from('expenses').select('*').order('created_at'),
-    supabase.from('expense_payments').select('*'),
+    sb.from('hospitals').select('*').order('created_at'),
+    sb.from('shifts').select('*'),
+    sb.from('expenses').select('*').order('created_at'),
+    sb.from('expense_payments').select('*'),
   ]);
   if(eh||es||ee||ep){ console.error(eh,es,ee,ep); alert('Erro ao carregar dados. Confira SUPABASE_URL/ANON_KEY e se o schema.sql foi executado.'); return; }
   hospitals = (h||[]).map(r=>({id:r.id, name:r.name, color:r.color, hourly:Number(r.hourly_rate), prod1:Number(r.prod1), prod2:Number(r.prod2), prod3:Number(r.prod3), prazo:r.prazo_dias}));
@@ -835,7 +835,7 @@ function renderExistingShifts(){
   }).join('') : '';
 }
 async function removeShift(id){
-  await supabase.from('shifts').delete().eq('id', id);
+  await sb.from('shifts').delete().eq('id', id);
   shifts = shifts.filter(s=>s.id!==id);
   renderExistingShifts();
   renderCalendar();
@@ -856,7 +856,7 @@ async function addShift(){
   if(clash){ errBox.classList.add('show'); return; }
   errBox.classList.remove('show');
 
-  const {data, error} = await supabase.from('shifts').insert({
+  const {data, error} = await sb.from('shifts').insert({
     user_id: currentUserId, hospital_id: hospitalId, shift_date: modalDateStr,
     start_time: start, end_time: end, extra_value: extra
   }).select().single();
@@ -909,7 +909,7 @@ function editHospital(id){
   window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
 }
 async function deleteHospital(id){
-  await supabase.from('hospitals').delete().eq('id', id);
+  await sb.from('hospitals').delete().eq('id', id);
   hospitals = hospitals.filter(h=>h.id!==id);
   shifts = shifts.filter(s=>s.hospitalId!==id);
   renderSetup();
@@ -928,11 +928,11 @@ async function saveHospital(){
   };
   const editId = document.getElementById('hosp-edit-id').value;
   if(editId){
-    const {error} = await supabase.from('hospitals').update(payload).eq('id', editId);
+    const {error} = await sb.from('hospitals').update(payload).eq('id', editId);
     if(error){ alert('Erro: '+error.message); return; }
     Object.assign(hospitalById(editId), {name:payload.name, color:payload.color, prazo:payload.prazo_dias, hourly:payload.hourly_rate, prod1:payload.prod1, prod2:payload.prod2, prod3:payload.prod3});
   } else {
-    const {data, error} = await supabase.from('hospitals').insert({...payload, user_id: currentUserId}).select().single();
+    const {data, error} = await sb.from('hospitals').insert({...payload, user_id: currentUserId}).select().single();
     if(error){ alert('Erro: '+error.message); return; }
     hospitals.push({id:data.id, name:data.name, color:data.color, hourly:Number(data.hourly_rate), prod1:Number(data.prod1), prod2:Number(data.prod2), prod3:Number(data.prod3), prazo:data.prazo_dias});
   }
@@ -947,11 +947,11 @@ async function togglePaid(id, key){
   const existing = paymentsRaw.find(p=>p.expense_id===id && p.month_ref===monthRef);
   if(existing){
     const newPaid = !existing.paid;
-    const {error} = await supabase.from('expense_payments').update({paid:newPaid, paid_at: newPaid? new Date().toISOString(): null}).eq('id', existing.id);
+    const {error} = await sb.from('expense_payments').update({paid:newPaid, paid_at: newPaid? new Date().toISOString(): null}).eq('id', existing.id);
     if(error){ alert('Erro: '+error.message); return; }
     existing.paid = newPaid;
   } else {
-    const {data, error} = await supabase.from('expense_payments').insert({user_id:currentUserId, expense_id:id, month_ref:monthRef, paid:true, paid_at:new Date().toISOString()}).select().single();
+    const {data, error} = await sb.from('expense_payments').insert({user_id:currentUserId, expense_id:id, month_ref:monthRef, paid:true, paid_at:new Date().toISOString()}).select().single();
     if(error){ alert('Erro: '+error.message); return; }
     paymentsRaw.push(data);
   }
@@ -1010,7 +1010,7 @@ function editExpense(id){
   window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
 }
 async function deleteExpense(id){
-  await supabase.from('expenses').delete().eq('id', id);
+  await sb.from('expenses').delete().eq('id', id);
   expenses = expenses.filter(e=>e.id!==id);
   paymentsRaw = paymentsRaw.filter(p=>p.expense_id!==id);
   renderExpenses();
@@ -1028,11 +1028,11 @@ async function saveExpense(){
   };
   const editId = document.getElementById('exp-edit-id').value;
   if(editId){
-    const {error} = await supabase.from('expenses').update(payload).eq('id', editId);
+    const {error} = await sb.from('expenses').update(payload).eq('id', editId);
     if(error){ alert('Erro: '+error.message); return; }
     Object.assign(expenses.find(e=>e.id===editId), {name:payload.name, category:payload.category, value:payload.value, split:payload.split_value});
   } else {
-    const {data, error} = await supabase.from('expenses').insert({...payload, user_id: currentUserId}).select().single();
+    const {data, error} = await sb.from('expenses').insert({...payload, user_id: currentUserId}).select().single();
     if(error){ alert('Erro: '+error.message); return; }
     expenses.push({id:data.id, name:data.name, category:data.category, value:Number(data.value), split:Number(data.split_value)});
   }
